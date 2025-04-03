@@ -1,0 +1,294 @@
+** start of undefined **
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Search Engine</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #ff0000;
+            text-align: center;
+        }
+        .search-container {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        #search-input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 4px 0 0 4px;
+        }
+        #search-button {
+            padding: 10px 20px;
+            background-color: #ff0000;
+            color: white;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #search-button:hover {
+            background-color: #cc0000;
+        }
+        .pokemon-display {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .pokemon-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        #sprite {
+            width: 120px;
+            height: 120px;
+            margin-right: 20px;
+        }
+        .pokemon-info {
+            flex: 1;
+        }
+        .pokemon-name-id {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 10px;
+        }
+        #pokemon-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-right: 10px;
+            text-transform: uppercase;
+            color: #333;
+        }
+        #pokemon-id {
+            font-size: 18px;
+            color: #666;
+        }
+        .pokemon-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .stat {
+            display: flex;
+            justify-content: space-between;
+        }
+        .stat-name {
+            font-weight: bold;
+        }
+        .types-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .type {
+            padding: 5px 10px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pokémon Search Engine</h1>
+    
+    <div class="search-container">
+        <input type="text" id="search-input" placeholder="Enter Pokémon name or ID..." required>
+        <button id="search-button">Search</button>
+    </div>
+    
+    <div class="pokemon-display">
+        <div class="pokemon-header">
+            <img id="sprite" src="" alt="Pokémon Sprite" style="display: none;">
+            <div class="pokemon-info">
+                <div class="pokemon-name-id">
+                    <span id="pokemon-name">-</span>
+                    <span id="pokemon-id">-</span>
+                </div>
+                <div id="weight">Weight: -</div>
+                <div id="height">Height: -</div>
+                <div class="types-container" id="types"></div>
+            </div>
+        </div>
+        
+        <div class="pokemon-stats">
+            <div class="stat">
+                <span class="stat-name">HP:</span>
+                <span id="hp">-</span>
+            </div>
+            <div class="stat">
+                <span class="stat-name">Attack:</span>
+                <span id="attack">-</span>
+            </div>
+            <div class="stat">
+                <span class="stat-name">Defense:</span>
+                <span id="defense">-</span>
+            </div>
+            <div class="stat">
+                <span class="stat-name">Special Attack:</span>
+                <span id="special-attack">-</span>
+            </div>
+            <div class="stat">
+                <span class="stat-name">Special Defense:</span>
+                <span id="special-defense">-</span>
+            </div>
+            <div class="stat">
+                <span class="stat-name">Speed:</span>
+                <span id="speed">-</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            
+            searchButton.addEventListener('click', searchPokemon);
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchPokemon();
+                }
+            });
+            
+            function searchPokemon() {
+                const searchTerm = searchInput.value.trim().toLowerCase();
+                
+                if (!searchTerm) {
+                    alert('Please enter a Pokémon name or ID');
+                    return;
+                }
+                
+                fetch(`https://pokeapi-proxy.freecodecamp.rocks/api/pokemon/${searchTerm}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Pokémon not found');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        displayPokemon(data);
+                    })
+                    .catch(error => {
+                        alert(error.message);
+                        clearDisplay();
+                    });
+            }
+            
+            function displayPokemon(pokemon) {
+                // Display basic info
+                document.getElementById('pokemon-name').textContent = pokemon.name.toUpperCase();
+                document.getElementById('pokemon-id').textContent = `#${pokemon.id}`;
+                document.getElementById('weight').textContent = `Weight: ${pokemon.weight}`;
+                document.getElementById('height').textContent = `Height: ${pokemon.height}`;
+                
+                // Display sprite
+                const sprite = document.getElementById('sprite');
+                sprite.src = pokemon.sprites.front_default;
+                sprite.style.display = 'block';
+                
+                // Display types
+                const typesContainer = document.getElementById('types');
+                typesContainer.innerHTML = ''; // Clear previous types
+                
+                pokemon.types.forEach(typeInfo => {
+                    const typeElement = document.createElement('span');
+                    typeElement.className = 'type';
+                    typeElement.textContent = typeInfo.type.name.toUpperCase();
+                    
+                    // Add color based on type
+                    const typeColor = getTypeColor(typeInfo.type.name);
+                    typeElement.style.backgroundColor = typeColor;
+                    
+                    typesContainer.appendChild(typeElement);
+                });
+                
+                // Display stats
+                pokemon.stats.forEach(statInfo => {
+                    const statName = statInfo.stat.name;
+                    const statValue = statInfo.base_stat;
+                    
+                    // Handle special cases for stat names
+                    let displayStatName = statName;
+                    if (statName === 'special-attack') displayStatName = 'special-attack';
+                    if (statName === 'special-defense') displayStatName = 'special-defense';
+                    
+                    document.getElementById(displayStatName).textContent = statValue;
+                });
+            }
+            
+            function clearDisplay() {
+                document.getElementById('pokemon-name').textContent = '-';
+                document.getElementById('pokemon-id').textContent = '-';
+                document.getElementById('weight').textContent = 'Weight: -';
+                document.getElementById('height').textContent = 'Height: -';
+                
+                const sprite = document.getElementById('sprite');
+                sprite.src = '';
+                sprite.style.display = 'none';
+                
+                document.getElementById('types').innerHTML = '';
+                
+                // Clear stats
+                ['hp', 'attack', 'defense', 'special-attack', 'special-defense', 'speed'].forEach(stat => {
+                    document.getElementById(stat).textContent = '-';
+                });
+            }
+            
+            function getTypeColor(type) {
+                const typeColors = {
+                    normal: '#A8A878',
+                    fire: '#F08030',
+                    water: '#6890F0',
+                    electric: '#F8D030',
+                    grass: '#78C850',
+                    ice: '#98D8D8',
+                    fighting: '#C03028',
+                    poison: '#A040A0',
+                    ground: '#E0C068',
+                    flying: '#A890F0',
+                    psychic: '#F85888',
+                    bug: '#A8B820',
+                    rock: '#B8A038',
+                    ghost: '#705898',
+                    dragon: '#7038F8',
+                    dark: '#705848',
+                    steel: '#B8B8D0',
+                    fairy: '#EE99AC'
+                };
+                
+                return typeColors[type.toLowerCase()] || '#777';
+            }
+        });
+    </script>
+</body>
+</html>
+
+** end of undefined **
+
+** start of undefined **
+
+
+
+** end of undefined **
+
+** start of undefined **
+
+
+
+** end of undefined **
+
